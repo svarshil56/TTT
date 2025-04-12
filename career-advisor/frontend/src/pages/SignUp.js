@@ -2,20 +2,22 @@ import React, { useState } from 'react';
 import {
   Box,
   Container,
-  Paper,
+  Typography,
   TextField,
   Button,
-  Typography,
-  Link,
+  Paper,
   Alert,
-  Avatar,
   IconButton,
+  InputAdornment,
+  useTheme
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { PhotoCamera } from '@mui/icons-material';
+import { useNavigate, Link } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { MdEmail, MdLock, MdPerson } from 'react-icons/md';
 
-const SignUp = () => {
+const Signup = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -24,203 +26,205 @@ const SignUp = () => {
     confirmPassword: '',
   });
   const [error, setError] = useState('');
-  const [profileImage, setProfileImage] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value
     });
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    // Password validation
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
+    setLoading(true);
 
     try {
-      // Check if user already exists
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const userExists = users.some(user => user.email === formData.email);
-      
-      if (userExists) {
-        setError('An account with this email already exists');
-        return;
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Passwords do not match');
       }
 
-      // Create user data object
-      const userData = {
-        id: Date.now().toString(),
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password, // Note: In a real app, this should be hashed
-        profileImage: profileImage || null,
+      if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      if (formData.password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      
+      if (users.some(user => user.email === formData.email)) {
+        throw new Error('Email already registered');
+      }
+
+      const newUser = {
+        ...formData,
+        id: Date.now(),
         createdAt: new Date().toISOString(),
         careerAssessment: false,
         skills: [],
         experience: [],
-        education: [],
+        education: []
       };
 
-      // Store user data in localStorage
-      users.push(userData);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Store current user (without password)
-      const { password, ...userWithoutPassword } = userData;
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      
-      // Navigate to profile page
+      localStorage.setItem('users', JSON.stringify([...users, newUser]));
+      localStorage.setItem('user', JSON.stringify(newUser));
       navigate('/profile');
     } catch (err) {
-      console.error('Error creating account:', err);
-      setError('Error creating account. Please try again.');
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <Container maxWidth="sm">
-      <Box sx={{ marginTop: 8, marginBottom: 8 }}>
-        <Paper elevation={3} sx={{ padding: 4 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography component="h1" variant="h5" gutterBottom>
-              Create Your Account
-            </Typography>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          py: 4
+        }}
+      >
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+          <Typography variant="h4" component="h1" gutterBottom align="center">
+            Create Account
+          </Typography>
 
-            {/* Profile Image Upload */}
-            <Box sx={{ mb: 3, textAlign: 'center' }}>
-              <Avatar
-                sx={{
-                  width: 100,
-                  height: 100,
-                  mb: 2,
-                  bgcolor: profileImage ? 'transparent' : 'primary.main',
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box component="form" onSubmit={handleSubmit} sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MdPerson />
+                  </InputAdornment>
+                )
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MdPerson />
+                  </InputAdornment>
+                )
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MdEmail />
+                  </InputAdornment>
+                )
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MdLock />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Confirm Password"
+              type={showPassword ? 'text' : 'password'}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MdLock />
+                  </InputAdornment>
+                )
+              }}
+            />
+            <Button
+              fullWidth
+              variant="contained"
+              type="submit"
+              disabled={loading}
+              sx={{ mt: 2 }}
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </Button>
+          </Box>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Already have an account?{' '}
+              <Link
+                to="/login"
+                style={{
+                  color: theme.palette.primary.main,
+                  textDecoration: 'none'
                 }}
-                src={profileImage}
-              />
-              <input
-                accept="image/*"
-                style={{ display: 'none' }}
-                id="profile-image-upload"
-                type="file"
-                onChange={handleImageChange}
-              />
-              <label htmlFor="profile-image-upload">
-                <IconButton
-                  color="primary"
-                  aria-label="upload profile picture"
-                  component="span"
-                >
-                  <PhotoCamera />
-                </IconButton>
-              </label>
-            </Box>
-
-            {error && (
-              <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-
-            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="firstName"
-                label="First Name"
-                autoFocus
-                value={formData.firstName}
-                onChange={handleChange}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="lastName"
-                label="Last Name"
-                value={formData.lastName}
-                onChange={handleChange}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="email"
-                label="Email Address"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="confirmPassword"
-                label="Confirm Password"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
               >
-                Sign Up
-              </Button>
-              <Box sx={{ textAlign: 'center' }}>
-                <Link href="#" variant="body2" onClick={() => navigate('/login')}>
-                  Already have an account? Sign in
-                </Link>
-              </Box>
-            </Box>
+                Sign in
+              </Link>
+            </Typography>
           </Box>
         </Paper>
       </Box>
@@ -228,4 +232,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp; 
+export default Signup; 

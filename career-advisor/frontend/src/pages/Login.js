@@ -2,133 +2,223 @@ import React, { useState } from 'react';
 import {
   Box,
   Container,
-  Paper,
+  Typography,
   TextField,
   Button,
-  Typography,
-  Link,
+  Paper,
   Alert,
+  IconButton,
+  InputAdornment,
+  Divider,
+  useTheme
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useNavigate, Link } from 'react-router-dom';
+import { FaEye, FaEyeSlash, FaGoogle, FaGithub, FaLinkedin } from 'react-icons/fa';
+import { MdEmail, MdLock } from 'react-icons/md';
+
+const MotionBox = motion(Box);
+const MotionPaper = motion(Paper);
 
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const theme = useTheme();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
-      return;
-    }
+    setError('');
+    setLoading(true);
 
     try {
       // Get users from localStorage
       const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const user = users.find(u => u.email === formData.email);
-
-      if (!user) {
-        setError('User not found. Please sign up first.');
-        return;
+      
+      // Find user
+      const user = users.find(u => u.email === email && u.password === password);
+      
+      if (user) {
+        // Save current user
+        localStorage.setItem('user', JSON.stringify(user));
+        navigate('/profile');
+      } else {
+        setError('Invalid email or password');
       }
-
-      // Store user in localStorage
-      localStorage.setItem('user', JSON.stringify(user));
-
-      // Force a page reload to update the Layout component
-      window.location.href = '/';
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const socialButtons = [
+    { icon: <FaGoogle />, label: 'Google', color: '#DB4437' },
+    { icon: <FaGithub />, label: 'GitHub', color: '#333' },
+    { icon: <FaLinkedin />, label: 'LinkedIn', color: '#0077B5' }
+  ];
+
   return (
     <Container maxWidth="sm">
-      <Box
+      <MotionBox
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
         sx={{
-          marginTop: 8,
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
+          justifyContent: 'center',
+          py: 4
         }}
       >
-        <Paper
+        <MotionPaper
           elevation={3}
           sx={{
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
+            p: 4,
+            borderRadius: 4,
+            background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
           }}
         >
-          <Typography component="h1" variant="h5" gutterBottom>
-            Sign in to Career Advisor
-          </Typography>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                fontWeight: 700,
+                background: 'linear-gradient(45deg, #2196F3, #21CBF3)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                mb: 2
+              }}
+            >
+              Welcome Back!
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Sign in to continue your career journey
+            </Typography>
+          </Box>
 
           {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
               {error}
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mb: 3 }}>
             <TextField
-              margin="normal"
-              required
               fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={formData.email}
-              onChange={handleChange}
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MdEmail />
+                  </InputAdornment>
+                )
+              }}
             />
             <TextField
-              margin="normal"
-              required
               fullWidth
-              name="password"
               label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={formData.password}
-              onChange={handleChange}
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MdLock />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
             />
             <Button
-              type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              type="submit"
+              disabled={loading}
+              sx={{
+                py: 1.5,
+                borderRadius: '50px',
+                background: 'linear-gradient(45deg, #2196F3, #21CBF3)',
+                boxShadow: '0 4px 14px rgba(33, 150, 243, 0.3)',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(33, 150, 243, 0.4)'
+                }
+              }}
             >
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
-            <Box sx={{ textAlign: 'center' }}>
-              <Link 
-                component="button"
-                variant="body2" 
-                onClick={() => navigate('/register')}
-              >
-                Don't have an account? Sign Up
-              </Link>
-            </Box>
           </Box>
-        </Paper>
-      </Box>
+
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              OR
+            </Typography>
+          </Divider>
+
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            {socialButtons.map((button) => (
+              <Button
+                key={button.label}
+                variant="outlined"
+                fullWidth
+                startIcon={button.icon}
+                sx={{
+                  py: 1.5,
+                  borderRadius: '50px',
+                  borderColor: button.color,
+                  color: button.color,
+                  '&:hover': {
+                    borderColor: button.color,
+                    backgroundColor: `${button.color}10`,
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+              >
+                {button.label}
+              </Button>
+            ))}
+          </Box>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Don't have an account?{' '}
+              <Link
+                to="/signup"
+                style={{
+                  color: theme.palette.primary.main,
+                  textDecoration: 'none',
+                  fontWeight: 600
+                }}
+              >
+                Sign up
+              </Link>
+            </Typography>
+          </Box>
+        </MotionPaper>
+      </MotionBox>
     </Container>
   );
 };

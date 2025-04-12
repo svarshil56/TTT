@@ -15,7 +15,7 @@ import JobMarket from './pages/JobMarket';
 import CareerPath from './pages/CareerPath';
 import ResumeCoach from './pages/ResumeCoach';
 import NetworkInsights from './pages/NetworkInsights';
-import About from './components/About';
+import Chatbot from './pages/Chatbot';
 
 // Theme configuration
 const theme = createTheme({
@@ -130,11 +130,13 @@ function App() {
             }
           />
           <Route
-            path="/about"
+            path="/chatbot"
             element={
-              <Layout>
-                <About />
-              </Layout>
+              <ProtectedRoute>
+                <Layout>
+                  <Chatbot />
+                </Layout>
+              </ProtectedRoute>
             }
           />
         </Routes>

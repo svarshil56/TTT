@@ -17,252 +17,88 @@ import {
   FormGroup,
   Checkbox,
   CircularProgress,
+  Card,
+  CardContent,
+  FormLabel,
+  LinearProgress,
+  useTheme,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getCareerSuggestions, parseSuggestions } from '../services/aiService';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaGraduationCap, FaLaptopCode, FaChartLine, FaUserTie, FaArrowRight, FaArrowLeft, FaQuestionCircle, FaLightbulb } from 'react-icons/fa';
 
-const questions = [
-  {
-    section: 'Discover Yourself (Inner Compass)',
-    description: 'Let\'s explore your true interests, values, and passions',
-    questions: [
-      {
-        id: 'activities',
-        question: 'What activities make you feel alive or excited?',
-        type: 'text',
-        placeholder: 'e.g., solving problems, helping others, designing, exploring, building',
-      },
-      {
-        id: 'passionWork',
-        question: 'What kind of work would you do even if it didn\'t pay much?',
-        type: 'text',
-        placeholder: 'Describe the work that truly motivates you',
-      },
-      {
-        id: 'careerValues',
-        question: 'Which of these matter most to you in a career? (Select top 3)',
-        type: 'checkbox',
-        options: [
-          'Money',
-          'Impact on society',
-          'Work-life balance',
-          'Prestige or recognition',
-          'Continuous learning',
-          'Creativity & freedom',
-          'Stability & security',
-          'Freedom from control',
-        ],
-        maxSelections: 3,
-      },
-      {
-        id: 'problemInterests',
-        question: 'What kind of problems are you naturally curious about?',
-        type: 'text',
-        placeholder: 'Describe the types of problems that intrigue you',
-      },
-      {
-        id: 'workPreferences',
-        question: 'Do you prefer working with... (Select all that apply)',
-        type: 'checkbox',
-        options: [
-          'People',
-          'Data',
-          'Systems',
-          'Ideas',
-          'Nature',
-          'Tools & Machines',
-        ],
-      },
-      {
-        id: 'dailyFeelings',
-        question: 'How do you want to feel in your work daily?',
-        type: 'text',
-        placeholder: 'e.g., challenged, relaxed, creative, impactful, powerful, useful',
-      },
-    ],
-  },
-  {
-    section: 'Social Influence Awareness',
-    description: 'Let\'s understand external influences on your career choices',
-    questions: [
-      {
-        id: 'externalSuggestions',
-        question: 'What career paths have people around you encouraged you to consider?',
-        type: 'text',
-        placeholder: 'List the career suggestions you\'ve received from others',
-      },
-      {
-        id: 'externalPressure',
-        question: 'Do you feel pressure from parents/friends/society in choosing a career?',
-        type: 'radio',
-        options: [
-          'Yes',
-          'No',
-          'Not Sure',
-        ],
-      },
-      {
-        id: 'admiredCareers',
-        question: 'What careers do you admire mainly because others do?',
-        type: 'text',
-        placeholder: 'e.g., Tech entrepreneur, IAS officer, YouTuber',
-      },
-      {
-        id: 'influences',
-        question: 'Who are your biggest influences (people, creators, celebrities, etc.)?',
-        type: 'text',
-        placeholder: 'List the people who influence your career thinking',
-      },
-      {
-        id: 'secretDream',
-        question: 'Now... ignoring all of that — what career would YOU secretly love to pursue?',
-        type: 'text',
-        placeholder: 'Be honest about your dream career',
-      },
-    ],
-  },
-  {
-    section: 'Skillset & Background',
-    description: 'Let\'s understand your current skills and background',
-    questions: [
-      {
-        id: 'educationLevel',
-        question: 'Your highest education level?',
-        type: 'radio',
-        options: [
-          'High School',
-          'Diploma',
-          'Bachelor\'s Degree',
-          'Master\'s Degree',
-          'Other',
-        ],
-      },
-      {
-        id: 'fieldOfStudy',
-        question: 'Current field of study / specialization / degree',
-        type: 'text',
-        placeholder: 'e.g., Computer Science, Business Administration, Psychology',
-      },
-      {
-        id: 'technicalSkills',
-        question: 'Top 5 technical or domain-specific skills',
-        type: 'text',
-        placeholder: 'e.g., Python, UX Design, Marketing, Data Analysis',
-      },
-      {
-        id: 'softSkills',
-        question: 'Top 5 soft skills or strengths',
-        type: 'text',
-        placeholder: 'e.g., Communication, Leadership, Problem-solving, Empathy',
-      },
-      {
-        id: 'tools',
-        question: 'Tools/Software/Platforms you\'re comfortable with',
-        type: 'text',
-        placeholder: 'e.g., Figma, Canva, MATLAB, GitHub, Blender',
-      },
-      {
-        id: 'experience',
-        question: 'Any past projects, internships, or jobs worth mentioning?',
-        type: 'text',
-        placeholder: 'Briefly describe your relevant experience',
-      },
-    ],
-  },
-  {
-    section: 'Career Preferences & Constraints',
-    description: 'Let\'s understand your career preferences and constraints',
-    questions: [
-      {
-        id: 'workEnvironment',
-        question: 'Preferred Work Environment',
-        type: 'radio',
-        options: [
-          'Remote',
-          'Hybrid',
-          'On-site',
-          'No Preference',
-        ],
-      },
-      {
-        id: 'industries',
-        question: 'Preferred Industries',
-        type: 'checkbox',
-        options: [
-          'Technology',
-          'Finance',
-          'Healthcare',
-          'Education',
-          'Design',
-          'Manufacturing',
-          'Retail',
-          'Entertainment',
-          'Non-profit',
-          'Government',
-          'Other',
-        ],
-      },
-      {
-        id: 'roles',
-        question: 'Preferred Roles / Domains (if any)',
-        type: 'text',
-        placeholder: 'e.g., Product Manager, Data Scientist, UI/UX Designer',
-      },
-      {
-        id: 'learningNewSkills',
-        question: 'Are you open to learning new skills for a better career fit?',
-        type: 'radio',
-        options: [
-          'Yes',
-          'Maybe',
-          'No',
-        ],
-      },
-      {
-        id: 'location',
-        question: 'Current Location & Willingness to Relocate',
-        type: 'text',
-        placeholder: 'Current city/country and relocation preference (Yes/No)',
-      },
-      {
-        id: 'languages',
-        question: 'Languages you speak fluently',
-        type: 'text',
-        placeholder: 'List the languages you are fluent in',
-      },
-      {
-        id: 'salary',
-        question: 'Expected Salary Range (Optional)',
-        type: 'radio',
-        options: [
-          'Under $50,000',
-          '$50,000 - $80,000',
-          '$80,000 - $120,000',
-          'Above $120,000',
-        ],
-      },
-      {
-        id: 'timeline',
-        question: 'When are you planning to switch/start a job?',
-        type: 'radio',
-        options: [
-          'Immediately',
-          'In 3 months',
-          'After graduation',
-          'Not sure',
-        ],
-      },
-    ],
-  },
+const MotionBox = motion(Box);
+const MotionCard = motion(Card);
+
+const steps = [
+  { label: 'Discover Yourself', icon: <FaUserTie /> },
+  { label: 'Skills & Interests', icon: <FaChartLine /> },
+  { label: 'Career Goals', icon: <FaLightbulb /> }
 ];
+
+const questions = {
+  'Discover Yourself': [
+    {
+      id: 'interests',
+      question: 'What activities make you feel most engaged?',
+      type: 'text',
+      placeholder: 'Describe activities that energize you...'
+    },
+    {
+      id: 'values',
+      question: 'What values are most important to you in a career?',
+      type: 'checkbox',
+      options: [
+        'Work-life balance',
+        'High salary',
+        'Making an impact',
+        'Continuous learning',
+        'Creativity',
+        'Stability'
+      ]
+    }
+  ],
+  'Skills & Interests': [
+    {
+      id: 'skills',
+      question: 'What are your strongest skills?',
+      type: 'text',
+      placeholder: 'List your top skills...'
+    },
+    {
+      id: 'interests',
+      question: 'What subjects or topics interest you most?',
+      type: 'text',
+      placeholder: 'Describe your interests...'
+    }
+  ],
+  'Career Goals': [
+    {
+      id: 'shortTerm',
+      question: 'What are your short-term career goals?',
+      type: 'text',
+      placeholder: 'Goals for the next 1-2 years...'
+    },
+    {
+      id: 'longTerm',
+      question: 'What are your long-term career aspirations?',
+      type: 'text',
+      placeholder: 'Where do you see yourself in 5-10 years?'
+    }
+  ]
+};
 
 const CareerAssessment = () => {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState(0);
-  const [activeQuestion, setActiveQuestion] = useState(0);
+  const [activeStep, setActiveStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showTips, setShowTips] = useState(false);
+  const theme = useTheme();
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -272,57 +108,25 @@ const CareerAssessment = () => {
   }, [navigate]);
 
   const handleNext = () => {
-    const currentSection = questions[activeSection];
-    const currentQuestion = currentSection.questions[activeQuestion];
-    
-    if (!answers[currentQuestion.id]) {
-      setError('Please answer the question before proceeding.');
-      return;
-    }
-    setError('');
-    
-    if (activeQuestion === currentSection.questions.length - 1) {
-      if (activeSection === questions.length - 1) {
-        saveAnswers();
-      } else {
-        setActiveSection(prev => prev + 1);
-        setActiveQuestion(0);
-      }
+    if (activeStep === steps.length - 1) {
+      handleSubmit();
     } else {
-      setActiveQuestion(prev => prev + 1);
+      setActiveStep((prev) => prev + 1);
     }
   };
 
   const handleBack = () => {
-    if (activeQuestion === 0) {
-      if (activeSection > 0) {
-        setActiveSection(prev => prev - 1);
-        setActiveQuestion(questions[activeSection - 1].questions.length - 1);
-      }
-    } else {
-      setActiveQuestion(prev => prev - 1);
-    }
-    setError('');
-  };
-
-  const handleSkip = () => {
-    const currentQuestion = questions[activeSection].questions[activeQuestion];
-    setAnswers(prev => ({
-      ...prev,
-      [currentQuestion.id]: 'Skipped'
-    }));
-    handleNext();
+    setActiveStep((prev) => prev - 1);
   };
 
   const handleAnswer = (questionId, value) => {
     setAnswers((prev) => ({
       ...prev,
-      [questionId]: value,
+      [questionId]: value
     }));
-    setError('');
   };
 
-  const saveAnswers = async () => {
+  const handleSubmit = async () => {
     try {
       setLoading(true);
       setError('');
@@ -336,12 +140,23 @@ const CareerAssessment = () => {
       }
       console.log('Current user:', user);
 
-      // Get AI suggestions
-      console.log('Getting AI suggestions...');
-      const aiResponse = await getCareerSuggestions(answers);
-      console.log('AI Response:', aiResponse);
-      const suggestions = parseSuggestions(aiResponse);
-      console.log('Parsed suggestions:', suggestions);
+      let suggestions = null;
+      try {
+        // Get AI suggestions
+        console.log('Getting AI suggestions...');
+        const aiResponse = await getCareerSuggestions(answers);
+        console.log('AI Response:', aiResponse);
+        suggestions = parseSuggestions(aiResponse);
+        console.log('Parsed suggestions:', suggestions);
+      } catch (aiError) {
+        console.warn('AI Service Error:', aiError);
+        // Continue without AI suggestions if the service fails
+        suggestions = {
+          careers: [],
+          skills: [],
+          message: 'AI suggestions are currently unavailable. Your answers have been saved successfully.'
+        };
+      }
 
       // Update user data
       const updatedUser = {
@@ -376,8 +191,14 @@ const CareerAssessment = () => {
       console.log('Updated profile:', updatedProfile);
       localStorage.setItem(profileKey, JSON.stringify(updatedProfile));
 
-      // Navigate to profile
-      navigate('/profile');
+      // Show success message
+      setError('Your answers have been saved successfully. ' + (suggestions?.message || ''));
+      
+      // Navigate to profile after a short delay
+      setTimeout(() => {
+        navigate('/profile');
+      }, 2000);
+
     } catch (error) {
       console.error('Detailed error:', error);
       setError(`Error saving your answers: ${error.message}`);
@@ -386,139 +207,174 @@ const CareerAssessment = () => {
     }
   };
 
-  const currentSection = questions[activeSection];
-  const currentQuestion = currentSection.questions[activeQuestion];
-  const totalQuestions = questions.reduce((sum, section) => sum + section.questions.length, 0);
-  const currentQuestionNumber = questions
-    .slice(0, activeSection)
-    .reduce((sum, section) => sum + section.questions.length, 0) + activeQuestion + 1;
+  const calculateProgress = () => {
+    const currentStepQuestions = questions[steps[activeStep].label];
+    const answeredQuestions = currentStepQuestions.filter(
+      q => answers[q.id] !== undefined && answers[q.id] !== ''
+    ).length;
+    return (answeredQuestions / currentStepQuestions.length) * 100;
+  };
 
   return (
     <Container maxWidth="md">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" gutterBottom align="center">
+      <MotionBox
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        sx={{ py: 4 }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{ fontWeight: 700 }}
+          >
             Career Assessment
           </Typography>
-          <Typography variant="h6" gutterBottom align="center" color="primary">
-            {currentSection.section}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 4 }} align="center" color="text.secondary">
-            {currentSection.description}
-          </Typography>
+          <Tooltip title="Need help?">
+            <IconButton onClick={() => setShowTips(!showTips)}>
+              <FaQuestionCircle />
+            </IconButton>
+          </Tooltip>
+        </Box>
 
-          <Stepper activeStep={activeSection} sx={{ mb: 4 }}>
-            {questions.map((section, index) => (
-              <Step key={index}>
-                <StepLabel>{section.section}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+        <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
+          {steps.map((step, index) => (
+            <Step key={step.label}>
+              <StepLabel
+                icon={step.icon}
+                sx={{
+                  '& .MuiStepLabel-label': {
+                    fontWeight: activeStep === index ? 600 : 400
+                  }
+                }}
+              >
+                {step.label}
+              </StepLabel>
+            </Step>
+          ))}
+        </Stepper>
 
-          <Typography variant="subtitle1" sx={{ mb: 2 }}>
-            Question {currentQuestionNumber} of {totalQuestions}
-          </Typography>
+        <LinearProgress
+          variant="determinate"
+          value={calculateProgress()}
+          sx={{ height: 8, borderRadius: 4, mb: 4 }}
+        />
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              {currentQuestion.question}
-            </Typography>
-
-            {currentQuestion.type === 'text' ? (
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                placeholder={currentQuestion.placeholder}
-                value={answers[currentQuestion.id] || ''}
-                onChange={(e) => handleAnswer(currentQuestion.id, e.target.value)}
-              />
-            ) : currentQuestion.type === 'radio' ? (
-              <FormControl component="fieldset">
-                <RadioGroup
-                  value={answers[currentQuestion.id] || ''}
-                  onChange={(e) => handleAnswer(currentQuestion.id, e.target.value)}
+        <AnimatePresence mode="wait">
+          <MotionCard
+            key={activeStep}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.5 }}
+            sx={{
+              borderRadius: 4,
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
+              mb: 4
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              {questions[steps[activeStep].label].map((q, index) => (
+                <MotionBox
+                  key={q.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  sx={{ mb: 4 }}
                 >
-                  {currentQuestion.options.map((option) => (
-                    <FormControlLabel
-                      key={option}
-                      value={option}
-                      control={<Radio />}
-                      label={option}
+                  <Typography variant="h6" gutterBottom>
+                    {q.question}
+                  </Typography>
+                  {q.type === 'text' ? (
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      placeholder={q.placeholder}
+                      value={answers[q.id] || ''}
+                      onChange={(e) => handleAnswer(q.id, e.target.value)}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                          }
+                        }
+                      }}
                     />
-                  ))}
-                </RadioGroup>
-              </FormControl>
-            ) : currentQuestion.type === 'checkbox' ? (
-              <FormControl component="fieldset">
-                <FormGroup>
-                  {currentQuestion.options.map((option) => (
-                    <FormControlLabel
-                      key={option}
-                      control={
-                        <Checkbox
-                          checked={answers[currentQuestion.id]?.includes(option) || false}
-                          onChange={(e) => {
-                            const currentAnswers = answers[currentQuestion.id] || [];
-                            const newAnswers = e.target.checked
-                              ? [...currentAnswers, option]
-                              : currentAnswers.filter((ans) => ans !== option);
-                            
-                            if (currentQuestion.maxSelections && newAnswers.length > currentQuestion.maxSelections) {
-                              return;
-                            }
-                            
-                            handleAnswer(currentQuestion.id, newAnswers);
-                          }}
+                  ) : q.type === 'checkbox' ? (
+                    <FormGroup>
+                      {q.options.map((option) => (
+                        <FormControlLabel
+                          key={option}
+                          control={
+                            <Checkbox
+                              checked={answers[q.id]?.includes(option) || false}
+                              onChange={(e) => {
+                                const currentAnswers = answers[q.id] || [];
+                                const newAnswers = e.target.checked
+                                  ? [...currentAnswers, option]
+                                  : currentAnswers.filter((ans) => ans !== option);
+                                handleAnswer(q.id, newAnswers);
+                              }}
+                            />
+                          }
+                          label={option}
                         />
-                      }
-                      label={option}
-                    />
-                  ))}
-                </FormGroup>
-              </FormControl>
-            ) : null}
-          </Box>
+                      ))}
+                    </FormGroup>
+                  ) : null}
+                </MotionBox>
+              ))}
+            </CardContent>
+          </MotionCard>
+        </AnimatePresence>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button
-              disabled={activeSection === 0 && activeQuestion === 0}
-              onClick={handleBack}
-              variant="outlined"
-            >
-              Back
-            </Button>
-            <Box>
-              <Button
-                variant="outlined"
-                onClick={handleSkip}
-                sx={{ mr: 2 }}
-              >
-                Skip
-              </Button>
-              <Button
-                variant="contained"
-                onClick={activeSection === questions.length - 1 && activeQuestion === currentSection.questions.length - 1
-                  ? saveAnswers
-                  : handleNext}
-                disabled={loading}
-              >
-                {loading ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : activeSection === questions.length - 1 && activeQuestion === currentSection.questions.length - 1
-                  ? 'Finish'
-                  : 'Next'}
-              </Button>
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
+        {error && (
+          <Alert severity="error" sx={{ mb: 4 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+            disabled={activeStep === 0}
+            startIcon={<FaArrowLeft />}
+            sx={{
+              px: 4,
+              py: 1.5,
+              borderRadius: '50px',
+              '&:hover': {
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            Back
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleNext}
+            endIcon={<FaArrowRight />}
+            sx={{
+              px: 4,
+              py: 1.5,
+              borderRadius: '50px',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.25)'
+              }
+            }}
+          >
+            {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+          </Button>
+        </Box>
+      </MotionBox>
     </Container>
   );
 };
