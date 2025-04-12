@@ -63,6 +63,7 @@ const Layout = ({ children }) => {
     { name: 'Career Path', path: '/career-path' },
     { name: 'Resume Coach', path: '/resume' },
     { name: 'Network', path: '/network' },
+    { name: 'About', path: '/about' },
   ];
 
   return (

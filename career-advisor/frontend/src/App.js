@@ -15,6 +15,7 @@ import JobMarket from './pages/JobMarket';
 import CareerPath from './pages/CareerPath';
 import ResumeCoach from './pages/ResumeCoach';
 import NetworkInsights from './pages/NetworkInsights';
+import About from './components/About';
 
 // Theme configuration
 const theme = createTheme({
@@ -126,6 +127,14 @@ function App() {
                   <NetworkInsights />
                 </Layout>
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <Layout>
+                <About />
+              </Layout>
             }
           />
         </Routes>
